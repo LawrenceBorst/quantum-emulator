@@ -75,6 +75,15 @@ class Circuit:
     def get_circuit(self):
         return self.circuit
 
+    def set_circuit(self, circuit):
+        self.circuit = circuit
+
+    def get_circuit_symbolic(self):
+        return self.circuit_symbolic
+
+    def set_circuit_symbolic(self, circuit_symbolic):
+        self.circuit_symbolic = circuit_symbolic
+
     def get_size(self):
         return self.n
 
@@ -110,7 +119,7 @@ class Circuit:
 
         return result
 
-    def execute(self, trials = 1):
+    def execute(self, trials=1):
         probs = abs(self.measure()) ** 2
         basis = []
 
@@ -118,14 +127,17 @@ class Circuit:
         for i in range(2**self.n):
             basis.append("{0:b}".format(i).zfill(self.n))   # Outputs array like [00, 01, 10, 11] (n = 2)
 
-        return random.choices(basis, weights = probs, k = trials)
+        return random.choices(basis, weights=probs, k=trials)
 
     def append_circuit(self, circ):
         if circ.get_size() != self.n:
             raise Exception("Cannot append circuits of different sizes")
         else:
-            circ = circ.get_circuit()
-            self.circuit.extend(circ)
+            circ_circuit = circ.get_circuit()
+            self.circuit.extend(circ_circuit)
+
+            circ_symbolic = circ.get_circuit_symbolic()
+            self.circuit_symbolic.extend(circ_symbolic)
 
     def draw(self):
         """Appends dashes to a string. E.g. X -> --X--, CTR -> -CTR-"""

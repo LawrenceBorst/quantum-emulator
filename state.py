@@ -19,6 +19,9 @@ class State:
                 raise Exception("State must be the same length as the number of qubits.")
             final_state = np.array([1])
             for vec in state:
+                if isinstance(vec, np.ndarray):   # In the odd case that the custom state is a numpy vector
+                    final_state = np.kron(final_state, vec.T)
+                    continue
                 if vec == 0:
                     final_state = np.kron(final_state, np.array([[1, 0]], dtype=complex).T)
                 elif vec == 1:

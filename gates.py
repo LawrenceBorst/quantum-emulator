@@ -39,16 +39,17 @@ def R(phi):
     return np.array([[1, 0],
                      [0, np.exp(1j*phi)]], dtype=complex)   # Common matrix performing rotation around z-axis
 
+
 """
-Controlled Unitary Operator.    ctrl=control qubit (1 to n)
-                                targ = target qubit (1 to n)
-                                U = 2 by 2 unitary matrix
+Controlled Unitary Operator.    ctrl=control qubit (0 to n-1)
+                                targ = target qubit (0 to n-1)
+                                U = unitary matrix
                                 n = number of qubits
 """
 def CU(ctrl, targ, U, n):
     if ctrl < targ:
         output = np.kron(U-np.identity(2), np.identity(2 ** (n - targ - 1)))
-        output = np.kron(np.identity(2 ** (targ-1-ctrl)), output)
+        output = np.kron(np.identity(2 ** (targ - 1 - ctrl)), output)
         output = np.kron(np.identity(2) - Z, output)
         output = 1 / 2 * np.kron(np.identity(2 ** ctrl), output)
         output = output + np.identity(2 ** n)
