@@ -156,8 +156,10 @@ finds a match in a list of 2^n elements
 
 
 def grover(o, n):
-    # Create a CNOT controlled by all n qubits acting on the oracle qubit
-    def make_CNOT_All():
+    """
+    Create a CNOT controlled by all n qubits acting on the oracle qubit
+    """
+    def CNOT_All():
         # Create a NOT gate controlled by all qubits
         Id = np.identity(2 ** (n + 1) - 2)
         X = gates.X
@@ -175,19 +177,41 @@ def grover(o, n):
     and only if the first n qubits correspond to the sought-after index
     I.e. |x>|q> -> |x>|(f(x) + q) (mod 2)>
     """
-    def make_oracle_circuit():
+    def oracle_circuit(o):
+        o = "{0:b}".format(o).zfill(n)
         oracle_circuit = circuit.Circuit(n + 1, prepared=True)
         first_third_layer = []
+        for i in range(n):
+            if o[i] == 0:
+                first_third_layer.append("X")
+            else:
+                first_third_layer.append("I")
+        oracle_circuit.append_layer(*first_third_layer)
 
-
-        second_layer = [make_CNOT_All()]
+        second_layer = [CNOT_All()]
         oracle_circuit.append_layer(*second_layer)
 
-        oracle_circuit.append_layer(first_third_layer)
+        oracle_circuit.append_layer(*first_third_layer)
+        return oracle_circuit
 
-    # Oracle matrix transformation
-    oracle = np.identity(2 ** n)
-    oracle[o, o] = - 1
+    def grover_iteration():
+        # Oracle part
+        grover_iteration_circuit = circuit.Circuit(n + 1, prepared=True)
+        grover_iteration_circuit.append_circuit(oracle_circuit)
+        # Hadamard part
+        hadamard_layer = []
+        for i in range(n):
+            hadamard_layer.append("H")
+        hadamard_layer.append("I")
+        grover_iteration_circuit.append_layer(*hadamard_layer)
+        # Phase part
+        phase_matrix = (-1) * np.identity(2**n)
+        phase_matrix[0, 0] = 1
+        phase_layer = [phase_matrix, "I"]
+        grover_iteration_circuit.append_layer(*phase_layer)
+        # Hadamard part
+        grover_iteration_circuit.append_layer(*hadamard_layer)
+        return grover_iteration_circuit
 
     init_state = []
     for i in range(n):
@@ -200,3 +224,9 @@ def grover(o, n):
     for i in range(n+1):
         current_layer.append("H")
     grover_circuit.append_layer(*current_layer)
+
+    # Add grover iteration layers
+    for i in range(n**(np.floor(n / 2))):
+        grover_circuit.append_circuit(grover_iteration())
+
+    return grover_circuit
