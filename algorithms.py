@@ -145,3 +145,58 @@ def phase_estimation(t, n, U, u):
     phase_circuit.append_layer(IQFT)
 
     return phase_circuit
+
+
+"""
+Grover's search with 1 specific location.
+n = number of qubits
+o = oracle, encoded as an integer
+finds a match in a list of 2^n elements
+"""
+
+
+def grover(o, n):
+    # Create a CNOT controlled by all n qubits acting on the oracle qubit
+    def make_CNOT_All():
+        # Create a NOT gate controlled by all qubits
+        Id = np.identity(2 ** (n + 1) - 2)
+        X = gates.X
+        # Direct sum of Id and X gives a CNOT gate controlled by all qubits acting on the last
+        CNOT_All = np.zeros(np.add(Id.shape, X.shape))
+        CNOT_All[:Id.shape[0],:Id.shape[1]] = Id
+        CNOT_All[Id.shape[0], Id.shape[1]:] = X
+        return CNOT_All
+
+    """
+    Create the oracle circuit. We create a first layer of X and I gates
+    Then a layer of 
+    Then repeat the first layer
+    The overall result is three layers, acting as a controlled NOT gate that flips the final qubit if
+    and only if the first n qubits correspond to the sought-after index
+    I.e. |x>|q> -> |x>|(f(x) + q) (mod 2)>
+    """
+    def make_oracle_circuit():
+        oracle_circuit = circuit.Circuit(n + 1, prepared=True)
+        first_third_layer = []
+
+
+        second_layer = [make_CNOT_All()]
+        oracle_circuit.append_layer(*second_layer)
+
+        oracle_circuit.append_layer(first_third_layer)
+
+    # Oracle matrix transformation
+    oracle = np.identity(2 ** n)
+    oracle[o, o] = - 1
+
+    init_state = []
+    for i in range(n):
+        init_state.append(0)
+    init_state.append(1)
+    grover_circuit = circuit.Circuit(n + 1, init_state=init_state)
+
+    # First layer with the Hadamard gates
+    current_layer = []
+    for i in range(n+1):
+        current_layer.append("H")
+    grover_circuit.append_layer(*current_layer)
