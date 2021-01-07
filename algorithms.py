@@ -164,9 +164,9 @@ def grover(o, n):
         Id = np.identity(2 ** (n + 1) - 2)
         X = gates.X
         # Direct sum of Id and X gives a CNOT gate controlled by all qubits acting on the last
-        CNOT_All = np.zeros(np.add(Id.shape, X.shape))
-        CNOT_All[:Id.shape[0],:Id.shape[1]] = Id
-        CNOT_All[Id.shape[0], Id.shape[1]:] = X
+        CNOT_All = np.zeros(np.add(Id.shape, X.shape), dtype='complex')
+        CNOT_All[:Id.shape[0], :Id.shape[1]] = Id
+        CNOT_All[Id.shape[0]:, Id.shape[1]:] = X
         return CNOT_All
 
     """
@@ -186,6 +186,7 @@ def grover(o, n):
                 first_third_layer.append("X")
             else:
                 first_third_layer.append("I")
+        first_third_layer.append("I")
         oracle_circuit.append_layer(*first_third_layer)
 
         second_layer = [CNOT_All()]
@@ -197,7 +198,7 @@ def grover(o, n):
     def grover_iteration():
         # Oracle part
         grover_iteration_circuit = circuit.Circuit(n + 1, prepared=True)
-        grover_iteration_circuit.append_circuit(oracle_circuit)
+        grover_iteration_circuit.append_circuit(oracle_circuit(o))
         # Hadamard part
         hadamard_layer = []
         for i in range(n):
@@ -221,12 +222,13 @@ def grover(o, n):
 
     # First layer with the Hadamard gates
     current_layer = []
-    for i in range(n+1):
+    for i in range(n):
         current_layer.append("H")
+    current_layer.append("I")
     grover_circuit.append_layer(*current_layer)
 
     # Add grover iteration layers
-    for i in range(n**(np.floor(n / 2))):
+    for i in range(int(n ** 0.5)):
         grover_circuit.append_circuit(grover_iteration())
 
     return grover_circuit

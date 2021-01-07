@@ -21,4 +21,8 @@ print("Output of phase estimation on T with eigenvector [0,1], 3 decimal places:
 circuit_phase = algorithms.phase_estimation(5, 1, gates.T, np.array([[0, 1]]))
 print("Output of phase estimation on T with eigenvector [0,1], 5 decimal places: ", circuit_phase.execute(trials=10))
 
-
+# Grover's algorithm
+circuit_grover = algorithms.grover(3, 2)
+print("Output of grover's algorithm with n=2, o=3: ", circuit_grover.execute(trials=10))
+print("The explanation is that about 70% of the time 11 is chosen (reading the first two digits)\n",
+      "which in essence means that the oracle is 11, i.e. 3.")
